@@ -12,17 +12,24 @@ public class playerLogic : MonoBehaviour
 	public GameObject body;
 	public float gravity = 4.5f;
 	public float jumpHeight = 9f;
+	public float jumpCoolDown = 0.1f;
 	public float speed = 3f;
 	public float sprintBonus = 2f;
-	public float attackDistance = 7f;
+	public float attackDistance = 3f;
 	public int damage = 2;
+	public int health = 200;
 	public float knockback = 3f;
 	public LayerMask attackableObjects;
+	public float mouseSensitivity = 0.2f;
+	public float buildDistance = 5f;
+	public LayerMask validBuildAreas;
+	public GameObject currentBuildObject;
 
 	private bool isMoving = false;
 	private bool isJumping = false;
 	private bool isSprinting = false;
 	private float jumpVel = 0;
+	private float jumpCoolDownTimer = 0;
 	private Vector2 movementDirection = Vector2.zero;
 	private Vector3 velocity = Vector3.zero;
 
@@ -43,9 +50,13 @@ public class playerLogic : MonoBehaviour
 		{
 			velocity += Vector3.down * gravity;
 		}
-		if (controller.isGrounded && isJumping)
+		if (controller.isGrounded && isJumping && jumpCoolDownTimer > jumpCoolDown)
 		{
-			jumpVel += jumpHeight;
+			jumpVel = jumpHeight;
+		}
+		else if (jumpCoolDownTimer < jumpCoolDown)
+		{
+			jumpCoolDownTimer += Time.deltaTime;
 		}
 
 		jumpVel = Math.Max(jumpVel - gravity * Time.deltaTime, 0);
@@ -63,13 +74,13 @@ public class playerLogic : MonoBehaviour
 	public void OnJump(InputAction.CallbackContext value)
 	{
 		isJumping = !value.canceled;
+		jumpCoolDownTimer = 0;
 	}
 
 	public void OnLook(InputAction.CallbackContext value)
 	{
-		Vector2 lookDirection = value.ReadValue<Vector2>();
+		Vector2 lookDirection = value.ReadValue<Vector2>() * mouseSensitivity;
 		float clampedXRotation = playerCamera.transform.localRotation.eulerAngles.x - lookDirection[1];
-		print(clampedXRotation);
 		if (clampedXRotation > 250)
 		{
 			clampedXRotation = Math.Clamp(clampedXRotation, 270, 360);
@@ -88,11 +99,21 @@ public class playerLogic : MonoBehaviour
 	public void OnAttack(InputAction.CallbackContext value)
 	{
 		if (!value.started) { return; }
-		if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out var hit, attackDistance, attackableObjects))
+		if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out var ray, attackDistance, attackableObjects))
 		{
-			GameObject attackedObj = hit.collider.gameObject;
+			GameObject attackedObj = ray.collider.gameObject;
 			enemyScript enemyLogic = attackedObj.GetComponentInParent<enemyScript>();
 			enemyLogic.attack(damage, playerCamera.transform.forward, knockback);
+		}
+	}
+
+	public void OnInteract(InputAction.CallbackContext value)
+	{
+		if (!value.started) { return; }
+		if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out var ray, buildDistance, validBuildAreas))
+		{
+			GameObject selectedObject = ray.collider.gameObject;
+			Instantiate(currentBuildObject, ray.point, Quaternion.Euler(0, playerCamera.transform.eulerAngles.y, 0));
 		}
 	}
 

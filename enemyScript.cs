@@ -8,6 +8,7 @@ public class enemyScript : MonoBehaviour
     public Material hitMaterial;
     public Material normalMaterial;
 	public int health = 100;
+    public int damage = 1;
     public float hitCoolDown = 0.1f;
     public float upwardKnockbackBonus = 2f;
 
