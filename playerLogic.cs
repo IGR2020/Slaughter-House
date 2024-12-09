@@ -18,7 +18,7 @@ public class playerLogic : MonoBehaviour
 	public float attackDistance = 3f;
 	public int damage = 2;
 	public int health = 200;
-	public float knockback = 3f;
+	public float knockback = 30f;
 	public LayerMask attackableObjects;
 	public float mouseSensitivity = 0.2f;
 	public float buildDistance = 5f;
@@ -102,8 +102,8 @@ public class playerLogic : MonoBehaviour
 		if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out var ray, attackDistance, attackableObjects))
 		{
 			GameObject attackedObj = ray.collider.gameObject;
-			enemyScript enemyLogic = attackedObj.GetComponentInParent<enemyScript>();
-			enemyLogic.attack(damage, playerCamera.transform.forward, knockback);
+			enemyScript enemyLogic = attackedObj.GetComponent<enemyScript>();
+			enemyLogic.Attack(damage, playerCamera.transform.forward, knockback);
 		}
 	}
 
